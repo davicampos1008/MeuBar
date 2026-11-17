@@ -1,0 +1,100 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meu Bar - Coquetelaria & Gestão</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{% static 'css/theme.css' %}">
+</head>
+<body class="flex h-screen overflow-hidden bg-[#07090E]">
+
+    {% if user.is_authenticated %}
+    <div id="sidebar-overlay" onclick="toggleSidebar()" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 hidden transition-opacity"></div>
+
+    <aside id="sidebar" class="fixed top-0 left-0 h-full w-72 bg-[#0F172A]/90 backdrop-blur-xl border-r border-slate-800 flex flex-col transition-transform duration-300 -translate-x-full z-50 shadow-2xl">
+        <div class="p-5 flex items-center justify-between border-b border-slate-800">
+            <div class="flex items-center gap-3 overflow-hidden">
+                <div class="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-xl text-amber-400">
+                    <img src="{% static 'images/logo.png' %}" alt="Logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" class="w-full h-full object-cover rounded-xl">
+                    <span style="display:none;">🍹</span>
+                </div>
+                <div>
+                    <h1 class="font-extrabold text-amber-400 tracking-wider text-sm">MEU BAR</h1>
+                    <p class="text-[10px] text-slate-400">Painel de Gestão</p>
+                </div>
+            </div>
+            <button onclick="toggleSidebar()" class="text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-slate-800">✕</button>
+        </div>
+
+        <nav class="flex-1 p-4 space-y-2 overflow-y-auto">
+            <a href="{% url 'recipes_list' %}" class="flex items-center gap-3.5 p-3 rounded-xl hover:bg-slate-800 text-slate-300 text-xs font-medium">
+                <span class="text-base">🍸</span><span>Catálogo de Receitas</span>
+            </a>
+            <a href="{% url 'inventory' %}" class="flex items-center gap-3.5 p-3 rounded-xl hover:bg-slate-800 text-slate-300 text-xs font-medium">
+                <span class="text-base">🍾</span><span>Meu Estoque & Doses</span>
+            
+            </a>    
+            <a href="{% url 'pricing_management' %}" class="flex items-center gap-3.5 p-3 rounded-xl hover:bg-slate-800 text-slate-300 text-xs font-medium">
+            <span class="text-base">💰</span><span>Precificação de Drinks</span>
+            </a>
+            </a>
+            
+            <a href="{% url 'manage_bars' %}" class="flex items-center gap-3.5 p-3 rounded-xl hover:bg-slate-800 text-slate-300 text-xs font-medium">
+                <span class="text-base">🏛️</span><span>Gerenciar Bares</span>
+            </a>
+            <a href="{% url 'create_recipe' %}" class="flex items-center gap-3.5 p-3 rounded-xl hover:bg-slate-800 text-slate-300 text-xs font-medium">
+                <span class="text-base">🧪</span><span>Criar Receita</span>
+            </a>
+            <a href="{% url 'qr_generator' %}" class="flex items-center gap-3.5 p-3 rounded-xl hover:bg-slate-800 text-slate-300 text-xs font-medium">
+                <span class="text-base">📱</span><span>Gerar QR Code</span>
+            </a>
+            <a href="{% url 'manage_sessions' %}" class="flex items-center gap-3.5 p-3 rounded-xl hover:bg-slate-800 text-slate-300 text-xs font-medium">
+                <span class="text-base">📋</span><span>Comandas Ativas</span>
+            </a>
+            <a href="{% url 'live_orders' %}" class="flex items-center gap-3.5 p-3 rounded-xl hover:bg-slate-800 text-slate-300 text-xs font-medium">
+                <span class="text-base">🛎️</span><span>Pedidos em Tempo Real</span>
+            </a>
+        </nav>
+
+        <div class="p-4 border-t border-slate-800 bg-[#07090E]">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-[11px] font-bold text-white">@{{ user.username }}</p>
+                    <a href="{% url 'logout' %}" class="text-[10px] text-rose-400 hover:underline">Sair da Conta</a>
+                </div>
+            </div>
+        </div>
+    </aside>
+    {% endif %}
+
+    <div class="flex-1 flex flex-col min-w-0 overflow-y-auto">
+        <header class="bg-[#07090E]/80 backdrop-blur border-b border-slate-800 px-6 py-4 flex justify-between items-center sticky top-0 z-30">
+            <div class="flex items-center gap-4">
+                {% if user.is_authenticated %}
+                <button onclick="toggleSidebar()" class="text-slate-300 hover:text-amber-400 p-2 rounded-xl bg-slate-900 border border-slate-800 shadow-sm" title="Abrir Menu">
+                    ☰
+                </button>
+                {% endif %}
+                <h2 class="text-xs font-bold uppercase tracking-wider text-slate-400">{% block header_title %}Painel Principal{% endblock %}</h2>
+            </div>
+            <span class="text-xs bg-slate-900 px-3.5 py-1.5 rounded-full border border-slate-800 text-amber-400 font-bold shadow-sm">Meu Bar</span>
+        </header>
+
+        <main class="p-6 max-w-5xl w-full mx-auto flex-1 flex flex-col">
+            {% block content %}
+            {% endblock %}
+        </main>
+    </div>
+
+    <script>
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            sidebar.classList.toggle('-translate-x-full');
+            overlay.classList.toggle('hidden');
+        }
+    </script>
+</body>
+</html>

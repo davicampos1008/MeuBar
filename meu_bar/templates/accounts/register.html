@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+<div class="max-w-md w-full mx-auto minimal-card p-8 sm:p-10 my-auto">
+    <div class="text-center mb-8">
+        <div class="w-16 h-16 mx-auto rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-3xl mb-4 shadow-inner">
+            <img src="{% static 'images/logo.png' %}" alt="Logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" class="w-full h-full object-cover rounded-2xl">
+            <span style="display:none;">🍸</span>
+        </div>
+        <h2 class="text-2xl font-black text-amber-400 tracking-tight">Criar Nova Conta</h2>
+        <p class="text-xs text-slate-400 mt-1">Junte-se ao Meu Bar e comece a gerenciar</p>
+    </div>
+
+    <form method="POST" class="space-y-4">
+        {% csrf_token %}
+        
+        <div>
+            <label class="form-label">Nome de Usuário</label>
+            <input type="text" name="username" required class="form-input" placeholder="Escolha um usuário (ex: DaviCampos)">
+            <p class="help-text">Letras, números e os caracteres @/./+/-/_.</p>
+        </div>
+
+        <div>
+            <label class="form-label">Senha</label>
+            <input type="password" name="password1" required class="form-input" placeholder="••••••••">
+            <p class="help-text">Sua senha deve ter pelo menos 8 caracteres e não pode ser totalmente numérica.</p>
+        </div>
+
+        <div>
+            <label class="form-label">Confirmação de Senha</label>
+            <input type="password" name="password2" required class="form-input" placeholder="••••••••">
+            <p class="help-text">Digite a mesma senha novamente para confirmação.</p>
+        </div>
+
+        {% if form.errors %}
+        <div class="bg-rose-500/10 border border-rose-500/20 p-3 rounded-xl text-xs text-rose-400 space-y-1">
+            <p class="font-bold">Por favor, corrija os erros abaixo:</p>
+            {{ form.errors }}
+        </div>
+        {% endif %}
+
+        <button type="submit" class="w-full btn-gold py-3.5 text-sm mt-4">Concluir Cadastro</button>
+    </form>
+
+    <div class="text-center mt-8 pt-6 border-t border-slate-800/80">
+        <p class="text-xs text-slate-400">Já possui uma conta? <a href="{% url 'login' %}" class="text-amber-400 font-bold hover:underline">Faça login</a></p>
+    </div>
+</div>
+{% endblock %}

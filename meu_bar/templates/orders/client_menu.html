@@ -1,0 +1,187 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cardápio Digital - {{ bar.name }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{% static 'css/theme.css' %}">
+</head>
+<body class="bg-[#07090E] text-slate-100 min-h-screen pb-16">
+
+    <header class="bg-[#0F172A] border-b border-slate-800 p-4 sticky top-0 z-30 flex justify-between items-center">
+        <div>
+            <h1 class="text-sm font-black text-amber-400 uppercase tracking-widest">{{ bar.name }}</h1>
+            <p class="text-[10px] text-slate-400">Atendimento • <b>{% if is_fixed_bar %}Balcão{% else %}Mesa {{ table_number }}{% endif %}</b></p>
+        </div>
+        {% if current_session and not is_fixed_bar %}
+        <button onclick="toggleCart()" class="bg-amber-500/20 text-amber-400 border border-amber-500/40 px-3 py-1.5 rounded-xl text-xs font-bold">
+            🛒 Meus Pedidos ({{ session_orders|length }})
+        </button>
+        {% endif %}
+    </header>
+
+    <main class="max-w-3xl mx-auto p-4 space-y-4">
+        {% if error_msg %}
+        <div class="bg-rose-500/10 border border-rose-500/30 p-3 rounded-xl text-xs text-rose-400 text-center font-bold">
+            {{ error_msg }}
+        </div>
+        {% endif %}
+
+        {% if not current_session %}
+        <div class="minimal-card p-6 text-center space-y-4 max-w-md mx-auto mt-10">
+            <h3 class="text-lg font-bold text-amber-400">Identificação do Atendimento</h3>
+            
+            {% if active_session and not is_fixed_bar %}
+            <p class="text-xs text-slate-300">Esta mesa já possui comanda ativa. Digite a senha para acessar:</p>
+            <form method="POST" class="space-y-3">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="start_session">
+                <input type="password" name="password" required class="form-input text-center text-sm" placeholder="Senha de 4 dígitos">
+                <button type="submit" class="w-full btn-gold py-3 text-xs">Entrar na Comanda</button>
+            </form>
+            {% else %}
+            <p class="text-xs text-slate-300">Digite seu nome para iniciar:</p>
+            <form method="POST" class="space-y-3">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="start_session">
+                <input type="text" name="client_name" required class="form-input text-center text-xs" placeholder="Seu Nome Completo">
+                <button type="submit" class="w-full btn-gold py-3 text-xs">Acessar Cardápio</button>
+            </form>
+            {% endif %}
+        </div>
+        {% else %}
+
+        {% if current_session and not is_fixed_bar and current_session.table_password %}
+        <!-- Senha Oculta -->
+        <div class="bg-amber-500/10 border border-amber-500/30 p-4 rounded-2xl flex justify-between items-center text-xs">
+            <div>
+                <p class="text-amber-400 font-bold">Cliente: {{ current_session.client_name }}</p>
+                <p class="text-slate-400">Senha de segurança:</p>
+            </div>
+            <div class="flex items-center gap-2">
+                <div id="password-box" class="bg-slate-900 px-4 py-2 rounded-xl border border-amber-500/50 text-amber-400 font-black tracking-widest">
+                    ••••
+                </div>
+                <button onclick="revealPassword('{{ current_session.table_password }}')" class="px-3 py-2 bg-slate-800 text-xs rounded-xl font-bold">👁️ Ver</button>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Categorias -->
+        <div class="flex gap-2 overflow-x-auto pb-2">
+            {% for cat in categories %}
+            <a href="?mesa={{ table_number }}&category={{ cat }}&preco={{ request.GET.preco }}{% if is_fixed_bar %}&bar_fixo=1{% endif %}" class="px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition {% if current_cat == cat %}bg-amber-500 text-slate-950{% else %}bg-[#0F172A] text-slate-300 border border-slate-800{% endif %}">
+                {{ cat }}
+            </a>
+            {% endfor %}
+        </div>
+
+        <!-- Grid de Drinks -->
+        <div class="grid grid-cols-2 gap-3">
+            {% for recipe in recipes %}
+            <div onclick="openModal('modal-{{ recipe.id }}')" class="minimal-card overflow-hidden cursor-pointer group hover:border-amber-500 transition">
+                <div class="h-32 bg-[#07090E] overflow-hidden">
+                    <img src="{{ recipe.image_url }}" alt="{{ recipe.name }}" class="w-full h-full object-cover group-hover:scale-105 transition">
+                </div>
+                <div class="p-3 bg-[#0F172A] text-center">
+                    <h4 class="font-bold text-xs text-white truncate">{{ recipe.name }}</h4>
+                    {% if show_price %}
+                    <p class="text-[11px] text-amber-400 font-bold mt-1">R$ {{ recipe.price|floatformat:2 }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Modal do Drink -->
+            <div id="modal-{{ recipe.id }}" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+                <div class="minimal-card max-w-md w-full overflow-hidden bg-[#0F172A] border border-slate-700 shadow-2xl relative">
+                    <button onclick="closeModal('modal-{{ recipe.id }}')" class="absolute top-3 right-3 bg-slate-900 text-white p-2 rounded-full z-10">✕</button>
+                    
+                    <div class="h-48 relative">
+                        <img src="{{ recipe.image_url }}" alt="{{ recipe.name }}" class="w-full h-full object-cover">
+                    </div>
+
+                    <div class="p-6 space-y-4 max-h-[50vh] overflow-y-auto">
+                        <div>
+                            <h3 class="text-lg font-black text-white">{{ recipe.name }}</h3>
+                            {% if show_price %}<p class="text-sm font-bold text-amber-400 mt-0.5">R$ {{ recipe.price|floatformat:2 }}</p>{% endif %}
+                            <p class="text-xs text-slate-400 mt-1">{{ recipe.history_summary|default:"Um clássico da coquetelaria." }}</p>
+                        </div>
+
+                        <div>
+                            <h5 class="text-xs font-bold text-amber-400 mb-1">Ingredientes</h5>
+                            <ul class="text-xs text-slate-300 space-y-1">
+                                {% for ing in recipe.ingredients_json %}
+                                <li class="bg-slate-900 p-2 rounded-lg border border-slate-800">✦ {{ ing.name }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+
+                        <form method="POST" class="space-y-3 pt-2">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="place_order">
+                            <input type="hidden" name="recipe_id" value="{{ recipe.id }}">
+                            
+                            <div class="flex gap-2">
+                                <div class="w-1/3">
+                                    <label class="form-label">Qtd</label>
+                                    <input type="number" name="quantity" value="1" min="1" max="10" class="form-input text-center text-xs">
+                                </div>
+                                <div class="w-2/3">
+                                    <label class="form-label">Observação</label>
+                                    <input type="text" name="observation" class="form-input text-xs" placeholder="Ex: Sem gelo">
+                                </div>
+                            </div>
+
+                            <button type="submit" class="w-full btn-gold py-3 text-xs">Enviar Pedido</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        {% if current_session and not is_fixed_bar %}
+        <!-- PAINEL FLUTUANTE DE RESUMO DA COMANDA DO CLIENTE -->
+        <div id="cart-drawer" class="fixed bottom-0 left-0 right-0 bg-[#0F172A] border-t border-slate-700 p-4 rounded-t-3xl shadow-2xl z-40 transform translate-y-full transition-transform duration-300 max-w-xl mx-auto">
+            <div class="flex justify-between items-center mb-3">
+                <h4 class="font-bold text-amber-400 text-sm">Resumo da sua Comanda</h4>
+                <button onclick="toggleCart()" class="text-slate-400 hover:text-white">✕</button>
+            </div>
+            <div class="max-h-40 overflow-y-auto space-y-2 divide-y divide-slate-800">
+                {% for order in session_orders %}
+                <div class="pt-2 flex justify-between text-xs text-slate-300">
+                    <span>{{ order.quantity }}x {{ order.recipe.name }}</span>
+                    {% if show_price %}<span class="text-amber-400">R$ {{ order.recipe.price|floatformat:2 }}</span>{% endif %}
+                </div>
+                {% empty %}
+                <p class="text-xs text-slate-500 text-center py-2">Nenhum pedido realizado ainda.</p>
+                {% endfor %}
+            </div>
+            {% if show_price %}
+            <div class="flex justify-between items-center pt-3 mt-3 border-t border-slate-800 font-bold text-sm">
+                <span>Total Parcial:</span>
+                <span class="text-emerald-400">R$ {{ session_total|floatformat:2 }}</span>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+        {% endif %}
+    </main>
+
+    <script>
+        function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
+        function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+        function revealPassword(pwd) {
+            const box = document.getElementById('password-box');
+            box.innerText = pwd;
+            setTimeout(() => { box.innerText = '••••'; }, 5000);
+        }
+        function toggleCart() {
+            const cart = document.getElementById('cart-drawer');
+            if (cart) cart.classList.toggle('translate-y-full');
+        }
+    </script>
+</body>
+</html>

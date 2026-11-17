@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+{% block header_title %}Cadastrar & Editar Coquetéis{% endblock %}
+{% block content %}
+<div class="max-w-xl mx-auto space-y-6">
+    <!-- Caixa de Pesquisa com Autocomplete para Editar -->
+    <div class="minimal-card p-6">
+        <h4 class="font-bold text-sm text-amber-400 mb-2">🔍 Selecionar Drink para Editar</h4>
+        <form method="GET" class="flex gap-2">
+            <input type="text" name="search" id="drink-search-input" list="drinks-list" value="{{ search_query }}" placeholder="Digite ou selecione o drink..." class="form-input text-xs flex-1" autocomplete="off">
+            <datalist id="drinks-list">
+                <!-- Todos os drinks disponíveis para autocomplete imediato -->
+                {% for d in all_recipes %}
+                <option value="{{ d.name }}">
+                {% endfor %}
+            </datalist>
+            <button type="submit" class="btn-gold px-4 py-2 text-xs">Carregar</button>
+        </form>
+        <p class="text-[10px] text-slate-400 mt-1.5">Digite o nome para buscar na base ou deixe em branco para cadastrar um novo.</p>
+    </div>
+
+    <!-- Formulário de Cadastro / Edição -->
+    <div class="minimal-card p-8 shadow-2xl">
+        <h2 class="text-xl font-black text-amber-400 mb-4">
+            {% if selected_recipe %}✏️ Editando: {{ selected_recipe.name }}{% else %}➕ Cadastrar Novo Drink{% endif %}
+        </h2>
+
+        <form method="POST" enctype="multipart/form-data" class="space-y-4">
+            {% csrf_token %}
+            {% if selected_recipe %}
+            <input type="hidden" name="recipe_id" value="{{ selected_recipe.id }}">
+            {% endif %}
+
+            <div>
+                <label class="form-label">Nome do Drink</label>
+                <input type="text" name="name" value="{{ selected_recipe.name }}" required class="form-input text-xs" placeholder="Ex: Mojito Especial">
+            </div>
+
+            <div>
+                <label class="form-label">Categoria</label>
+                <select name="category" class="form-input text-xs text-white">
+                    <option value="Refrescantes" {% if selected_recipe.category == 'Refrescantes' %}selected{% endif %}>Refrescantes</option>
+                    <option value="Fortes" {% if selected_recipe.category == 'Fortes' %}selected{% endif %}>Fortes</option>
+                    <option value="Cítricos" {% if selected_recipe.category == 'Cítricos' %}selected{% endif %}>Cítricos</option>
+                    <option value="Tropicais" {% if selected_recipe.category == 'Tropicais' %}selected{% endif %}>Tropicais</option>
+                    <option value="Doces & Frutados" {% if selected_recipe.category == 'Doces & Frutados' %}selected{% endif %}>Doces & Frutados</option>
+                    <option value="Aperitivos" {% if selected_recipe.category == 'Aperitivos' %}selected{% endif %}>Aperitivos</option>
+                </select>
+            </div>
+
+            <div>
+                <label class="form-label">Preço de Venda (R$)</label>
+                <input type="number" step="0.50" name="price" value="{{ selected_recipe.price|default:'25.00' }}" required class="form-input text-xs text-amber-400 font-bold">
+            </div>
+
+            <div>
+                <label class="form-label">Foto do Drink (Câmera ou Galeria)</label>
+                <input type="file" name="image_file" accept="image/*" capture="environment" class="form-input text-xs file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-amber-500 file:text-slate-950">
+            </div>
+
+            <div>
+                <label class="form-label">História / Resumo</label>
+                <textarea name="history_summary" rows="2" class="form-input text-xs" placeholder="Breve histórico...">{{ selected_recipe.history_summary }}</textarea>
+            </div>
+
+            <div>
+                <label class="form-label">Ingredientes</label>
+                <textarea name="ingredients_text" rows="2" required class="form-input text-xs" placeholder="Ex: 50ml Gin, 150ml Tônica...">{% for ing in selected_recipe.ingredients_json %}{{ ing.name }}{% endfor %}</textarea>
+            </div>
+
+            <div>
+                <label class="form-label">Modo de Preparo</label>
+                <textarea name="instructions" rows="3" required class="form-input text-xs" placeholder="Passo a passo...">{{ selected_recipe.instructions }}</textarea>
+            </div>
+
+            <button type="submit" class="w-full btn-gold py-3.5 text-xs">
+                {% if selected_recipe %}Salvar Alterações{% else %}Cadastrar Nova Receita{% endif %}
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

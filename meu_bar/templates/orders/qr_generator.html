@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+{% block header_title %}Gerador Avançado de QR Codes{% endblock %}
+{% block content %}
+<div class="space-y-6">
+    <div class="minimal-card p-6 max-w-2xl mx-auto space-y-4">
+        <h3 class="text-lg font-black text-amber-400">Gerenciar QR Codes & Atendimento</h3>
+        <p class="text-xs text-slate-400">Escolha entre gerar um QR Code unitário (grande) para balcão/bar fixo ou um lote para múltiplas mesas.</p>
+        
+        <form id="qr-form" onsubmit="generateQRCodes(event)" class="space-y-4 pt-2">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="form-label">Bar Selecionado</label>
+                    <select id="bar_id" class="form-input text-xs text-white">
+                        {% for b in user_bars %}
+                        <option value="{{ b.id }}">{{ b.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label class="form-label">Exibir Preços no Cardápio?</label>
+                    <select id="show_price" class="form-input text-xs text-white">
+                        <option value="nao">Não (Somente Cardápio)</option>
+                        <option value="sim">Sim (Com Preços R$)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="form-label">Modo de Operação</label>
+                    <select id="mode" onchange="toggleMode()" class="form-input text-xs text-white">
+                        <option value="single">QR Code Unitário (Bar Fixo / Geral)</option>
+                        <option value="batch">Múltiplas Mesas (Lote para Impressão)</option>
+                    </select>
+                </div>
+                <div id="batch-table-box" class="hidden">
+                    <label class="form-label">Quantidade Total de Mesas</label>
+                    <input type="number" id="total_tables" value="10" min="1" max="50" class="form-input text-xs">
+                </div>
+            </div>
+
+            <button type="submit" class="w-full btn-gold py-3.5 text-xs shadow-lg">Gerar QR Codes</button>
+        </form>
+    </div>
+
+    <!-- ÁREA DE EXIBIÇÃO E IMPRESSÃO -->
+    <div id="qr-output-area" class="hidden space-y-4">
+        <div class="flex justify-between items-center max-w-4xl mx-auto px-4">
+            <h4 class="font-bold text-amber-400 text-sm">QR Code Gerado</h4>
+            <button onclick="window.print()" class="btn-gold px-4 py-2 text-xs">🖨️ Imprimir QR Codes</button>
+        </div>
+
+        <div id="qr-grid" class="flex flex-col items-center gap-6 max-w-4xl mx-auto"></div>
+    </div>
+</div>
+
+<script>
+    function toggleMode() {
+        const mode = document.getElementById('mode').value;
+        const batchBox = document.getElementById('batch-table-box');
+        if (mode === 'single') {
+            batchBox.classList.add('hidden');
+        } else {
+            batchBox.classList.remove('hidden');
+        }
+    }
+
+    function generateQRCodes(e) {
+        e.preventDefault();
+        const barId = document.getElementById('bar_id').value;
+        const showPrice = document.getElementById('show_price').value;
+        const mode = document.getElementById('mode').value;
+        const grid = document.getElementById('qr-grid');
+        grid.innerHTML = '';
+
+        let itemsToGenerate = [];
+        if (mode === 'single') {
+            itemsToGenerate.push({ title: "ATENDIMENTO GERAL / BALCÃO", link: `${window.location.origin}/orders/client-menu/${barId}/?mesa=Balcão&bar_fixo=1&preco=${showPrice}`, large: true });
+        } else {
+            const total = parseInt(document.getElementById('total_tables').value);
+            for (let i = 1; i <= total; i++) {
+                itemsToGenerate.push({ title: `MESA ${i}`, link: `${window.location.origin}/orders/client-menu/${barId}/?mesa=${i}&preco=${showPrice}`, large: false });
+            }
+        }
+
+        itemsToGenerate.forEach(item => {
+            const size = item.large ? "260x260" : "180x180";
+            const qrApi = `https://api.qrserver.com/v1/create-qr-code/?size=${size}&data=${encodeURIComponent(item.link)}`;
+            
+            const copies = item.large ? 1 : 2; // Unitário gera 1 grande; mesas geram 2 menores
+            for (let copy = 1; copy <= copies; copy++) {
+                const card = document.createElement('div');
+                card.className = "minimal-card p-8 text-center space-y-3 bg-white text-slate-950 border-2 border-slate-300 shadow-md break-inside-avoid w-full max-w-md";
+                card.innerHTML = `
+                    <h5 class="font-black text-base tracking-wider uppercase text-slate-800">MEU BAR • ${item.title}</h5>
+                    <p class="text-xs text-slate-500">Escaneie para abrir o cardápio digital</p>
+                    <img src="${qrApi}" alt="QR ${item.title}" class="mx-auto">
+                    <p class="text-[10px] text-slate-400 break-all">${item.link}</p>
+                `;
+                grid.appendChild(card);
+            }
+        });
+
+        document.getElementById('qr-output-area').classList.remove('hidden');
+    }
+</script>
+{% endblock %}

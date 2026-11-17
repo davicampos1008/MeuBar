@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+{% block header_title %}Catálogo de Receitas{% endblock %}
+{% block content %}
+<div class="space-y-6">
+    <!-- Busca e Filtros -->
+    <div class="minimal-card p-4 flex justify-between items-center gap-4">
+        <form method="GET" class="w-full">
+            <input type="text" name="search" value="{{ request.GET.search }}" placeholder="Buscar coquetel..." class="form-input text-xs py-2.5">
+        </form>
+    </div>
+
+    <!-- Categorias -->
+    <div class="flex gap-2 overflow-x-auto pb-2">
+        {% for cat in categories %}
+        <a href="?category={{ cat }}" class="px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition {% if current_cat == cat %}bg-amber-500 text-slate-950{% else %}bg-[#0F172A] text-slate-300 border border-slate-800{% endif %}">
+            {{ cat }}
+        </a>
+        {% endfor %}
+    </div>
+
+    <!-- Grid Quadrado Compacto (Apenas Imagem Real e Nome) -->
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+        {% for recipe in recipes %}
+        <div onclick="openModal('modal-{{ recipe.id }}')" class="minimal-card overflow-hidden cursor-pointer group hover:border-amber-500/50 transition">
+            <div class="h-36 bg-[#07090E] relative overflow-hidden">
+                <img src="{{ recipe.image_url }}" alt="{{ recipe.name }}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
+            </div>
+            <div class="p-3 bg-[#0F172A]">
+                <h4 class="font-bold text-xs text-white truncate text-center">{{ recipe.name }}</h4>
+            </div>
+        </div>
+
+        <!-- MODAL / POPUP DETALHADO DO DRINK -->
+        <div id="modal-{{ recipe.id }}" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+            <div class="minimal-card max-w-lg w-full overflow-hidden relative bg-[#0F172A] border border-slate-700 shadow-2xl">
+                <button onclick="closeModal('modal-{{ recipe.id }}')" class="absolute top-3 right-3 bg-slate-900/80 text-white p-2 rounded-full z-10 hover:bg-slate-800">✕</button>
+                
+                <div class="h-56 relative">
+                    <img src="{{ recipe.image_url }}" alt="{{ recipe.name }}" class="w-full h-full object-cover">
+                    <div class="absolute inset-0 bg-gradient-to-t from-[#0F172A] via-transparent to-transparent"></div>
+                </div>
+
+                <div class="p-6 space-y-4 max-h-[60vh] overflow-y-auto">
+                    <div>
+                        <span class="text-[10px] font-bold text-amber-400 uppercase tracking-widest">{{ recipe.category }}</span>
+                        <h3 class="text-xl font-black text-white mt-0.5">{{ recipe.name }}</h3>
+                        <p class="text-xs text-slate-400 mt-1">Criado por: @{{ recipe.creator_nick }}</p>
+                    </div>
+
+                    {% if recipe.history_summary %}
+                    <div class="bg-slate-900/60 p-3.5 rounded-xl border border-slate-800">
+                        <h5 class="text-xs font-bold text-amber-400 mb-1">📖 História & Resumo</h5>
+                        <p class="text-xs text-slate-300 leading-relaxed">{{ recipe.history_summary }}</p>
+                    </div>
+                    {% endif %}
+
+                    <div>
+                        <h5 class="text-xs font-bold text-amber-400 mb-1.5">🍸 Ingredientes</h5>
+                        <ul class="text-xs text-slate-300 space-y-1">
+                            {% for ing in recipe.ingredients_json %}
+                            <li class="bg-slate-900/40 px-3 py-1.5 rounded-lg border border-slate-800/60">✦ {{ ing.name }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+
+                    <div>
+                        <h5 class="text-xs font-bold text-amber-400 mb-1.5">⚡ Modo de Preparo</h5>
+                        <p class="text-xs text-slate-300 leading-relaxed bg-slate-900/40 p-3.5 rounded-xl border border-slate-800/60">{{ recipe.instructions }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<script>
+    function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
+    function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+</script>
+{% endblock %}

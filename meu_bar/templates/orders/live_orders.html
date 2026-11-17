@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% block header_title %}Pedidos em Tempo Real (Cozinha & Bar){% endblock %}
+{% block content %}
+<div class="space-y-6">
+    <div class="minimal-card p-6">
+        <h3 class="font-bold text-amber-400 text-base mb-1">🛎️ Fila de Preparo</h3>
+        <p class="text-xs text-slate-400">Clique no card para ver a receita completa e agilizar o preparo.</p>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {% for order in orders %}
+        <div onclick="openModal('order-modal-{{ order.id }}')" class="minimal-card p-4 space-y-3 cursor-pointer group hover:border-amber-500 transition border-l-4 {% if order.status == 'Entregue' %}border-slate-600 opacity-60{% elif order.status == 'Pronto' %}border-emerald-500{% else %}border-amber-500{% endif %}">
+            <div class="flex justify-between items-center">
+                <span class="text-[10px] font-bold bg-slate-900 px-2.5 py-1 rounded-full text-amber-400 border border-slate-800">
+                    {% if order.session.is_fixed_bar %}Balcão{% else %}Mesa {{ order.session.table_number }}{% endif %}
+                </span>
+                <span class="text-[10px] px-2 py-0.5 rounded font-bold {% if order.status == 'Entregue' %}bg-slate-800 text-slate-400{% elif order.status == 'Pronto' %}bg-emerald-500/20 text-emerald-400{% else %}bg-amber-500/20 text-amber-400{% endif %}">
+                    {{ order.status }}
+                </span>
+            </div>
+
+            <div>
+                <h4 class="font-black text-sm text-white group-hover:text-amber-400 transition">{{ order.quantity }}x {{ order.recipe.name }}</h4>
+                <p class="text-[11px] text-slate-400 mt-0.5">Cliente: {{ order.session.client_name }}</p>
+                {% if order.observation %}
+                <p class="text-[11px] text-rose-400 mt-1 bg-rose-500/10 p-2 rounded-lg border border-rose-500/20"><b>Obs:</b> {{ order.observation }}</p>
+                {% endif %}
+            </div>
+
+            <div class="flex justify-between items-center pt-2 border-t border-slate-800 text-[10px] text-slate-500">
+                <span>{{ order.created_at|date:"H:i" }}</span>
+                <span class="text-amber-400 font-bold hover:underline">Ver Receita ↗</span>
+            </div>
+        </div>
+
+        <!-- MODAL DA RECEITA PARA O BARMAN -->
+        <div id="order-modal-{{ order.id }}" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+            <div class="minimal-card max-w-md w-full overflow-hidden bg-[#0F172A] border border-slate-700 shadow-2xl relative" onclick="event.stopPropagation()">
+                <button onclick="closeModal('order-modal-{{ order.id }}')" class="absolute top-3 right-3 bg-slate-900 text-white p-2 rounded-full z-10">✕</button>
+                
+                <div class="h-44 relative">
+                    <img src="{{ order.recipe.image_url }}" alt="{{ order.recipe.name }}" class="w-full h-full object-cover">
+                </div>
+
+                <div class="p-6 space-y-4 max-h-[50vh] overflow-y-auto">
+                    <div>
+                        <span class="text-[10px] font-bold text-amber-400 uppercase">Preparo do Drink</span>
+                        <h3 class="text-lg font-black text-white">{{ order.quantity }}x {{ order.recipe.name }}</h3>
+                        <p class="text-xs text-slate-400 mt-0.5">Cliente: <b>{{ order.session.client_name }}</b></p>
+                        {% if order.observation %}
+                        <p class="text-xs text-rose-400 mt-2 bg-rose-500/10 p-2 rounded-lg border border-rose-500/20"><b>Observação do Pedido:</b> {{ order.observation }}</p>
+                        {% endif %}
+                    </div>
+
+                    <div>
+                        <h5 class="text-xs font-bold text-amber-400 mb-1">Ingredientes</h5>
+                        <ul class="text-xs text-slate-300 space-y-1">
+                            {% for ing in order.recipe.ingredients_json %}
+                            <li class="bg-slate-900 p-2 rounded-lg border border-slate-800">✦ {{ ing.name }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+
+                    <div>
+                        <h5 class="text-xs font-bold text-amber-400 mb-1">Modo de Preparo</h5>
+                        <p class="text-xs text-slate-300 bg-slate-900 p-3 rounded-lg border border-slate-800 leading-relaxed">{{ order.recipe.instructions }}</p>
+                    </div>
+
+                    <form method="POST" class="pt-2">
+                        {% csrf_token %}
+                        <input type="hidden" name="order_id" value="{{ order.id }}">
+                        <button type="submit" class="w-full btn-gold py-3 text-xs font-bold">
+                            {% if order.status == 'Pendente' %}Marcar como PRONTO ⚡{% elif order.status == 'Pronto' %}Marcar como ENTREGUE ✓{% else %}Retornar para Pendente ↺{% endif %}
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-span-full text-center py-16 minimal-card text-slate-500 text-xs">
+            Nenhum pedido pendente no momento.
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<script>
+    function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
+    function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+</script>
+{% endblock %}

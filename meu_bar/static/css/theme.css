@@ -1,0 +1,85 @@
+:root {
+    --bg-primary: #07090E;       /* Fundo escuro absoluto minimalista */
+    --bg-card: #0F172A;          /* Cartões com contraste sutil */
+    --accent-gold: #F59E0B;      /* Dourado / Âmbar sofisticado */
+    --accent-gold-hover: #D97706;
+    --text-light: #F8FAFC;
+    --text-muted: #64748B;       /* Cinza elegante para textos secundários */
+    --border-subtle: rgba(255, 255, 255, 0.06);
+}
+
+body {
+    background-color: var(--bg-primary);
+    color: var(--text-light);
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    margin: 0;
+    padding: 0;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* Card Minimalista e Elegante */
+.minimal-card {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: 1.5rem;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+}
+
+/* Botão Principal */
+.btn-gold {
+    background-color: var(--accent-gold);
+    color: #07090E;
+    font-weight: 700;
+    border-radius: 0.875rem;
+    transition: all 0.25s ease;
+}
+.btn-gold:hover {
+    background-color: var(--accent-gold-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 10px 20px -5px rgba(245, 158, 11, 0.3);
+}
+
+/* Campos de Formulário Modernos */
+.form-input {
+    background-color: #07090E;
+    border: 1px solid #1E293B;
+    border-radius: 0.875rem;
+    padding: 0.875rem 1rem;
+    color: var(--text-light);
+    font-size: 0.9rem;
+    outline: none;
+    transition: all 0.2s ease;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.form-input:focus {
+    border-color: var(--accent-gold);
+    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.15);
+}
+
+/* Rótulos e Textos de Ajuda */
+.form-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    margin-bottom: 0.4rem;
+    display: block;
+}
+
+.help-text {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    line-height: 1.4;
+    margin-top: 0.3rem;
+}
+
+.error-list {
+    font-size: 0.75rem;
+    color: #EF4444;
+    list-style: none;
+    padding: 0;
+    margin-top: 0.3rem;
+}

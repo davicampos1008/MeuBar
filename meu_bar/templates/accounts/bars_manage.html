@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% block header_title %}Gerenciar Meus Bares (Casa / Pub){% endblock %}
+{% block content %}
+<div class="space-y-6">
+    <!-- Formulário para criar novo bar -->
+    <div class="card-surface p-5 space-y-4">
+        <h3 class="font-bold text-sm text-amber-400">➕ Adicionar Novo Ambiente de Bar</h3>
+        <form method="POST" class="grid grid-cols-1 md:grid-cols-3 gap-3">
+            {% csrf_token %}
+            <input type="text" name="name" placeholder="Ex: GarageBar Pub" required class="bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-xs text-white">
+            <select name="bar_type" class="bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-xs text-white">
+                <option value="home">Residencial (Casa)</option>
+                <option value="commercial_counter">Comercial (Balcão)</option>
+                <option value="commercial_tables">Comercial (Mesas)</option>
+            </select>
+            <button type="submit" class="btn-gold py-2.5 text-xs">Criar Bar</button>
+        </form>
+    </div>
+
+    <!-- Lista de Bares Cadastrados -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {% for bar in user_bars %}
+        <div class="card-surface p-5 space-y-2 border-l-4 border-amber-500">
+            <h4 class="font-bold text-base text-white">{{ bar.name }}</h4>
+            <p class="text-xs text-slate-400">Tipo: <span class="text-amber-400 font-medium">{{ bar.get_bar_type_display }}</span></p>
+            <p class="text-[11px] text-slate-500">Criado em: {{ bar.created_at|date:"d/m/Y" }}</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

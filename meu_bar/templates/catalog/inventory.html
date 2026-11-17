@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+{% block header_title %}Gerenciamento de Insumos & Estoque{% endblock %}
+{% block content %}
+<div class="space-y-6">
+    <div class="minimal-card p-6 flex flex-col md:flex-row justify-between items-center gap-4">
+        <div>
+            <h3 class="font-black text-amber-400 text-lg">Estoque Padronizado do Bar</h3>
+            <p class="text-xs text-slate-400 mt-0.5">Selecione insumos e sabores para o bar selecionado.</p>
+        </div>
+        <form method="GET" class="flex items-center gap-2">
+            <input type="hidden" name="tab" value="{{ active_tab }}">
+            <span class="text-xs text-slate-400 font-semibold">Bar:</span>
+            <select name="bar_id" onchange="this.form.submit()" class="form-input text-xs py-2">
+                {% for b in user_bars %}
+                <option value="{{ b.id }}" {% if active_bar and active_bar.id == b.id %}selected{% endif %}>{{ b.name }}</option>
+                {% endfor %}
+            </select>
+        </form>
+    </div>
+
+    <!-- Abas de Categorias -->
+    <div class="flex gap-2 overflow-x-auto pb-2 border-b border-slate-800">
+        <a href="?tab=alcoolica{% if active_bar %}&bar_id={{ active_bar.id }}{% endif %}" class="px-5 py-2.5 rounded-xl text-xs font-bold transition whitespace-nowrap {% if active_tab == 'alcoolica' %}bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/20{% else %}bg-[#0F172A] text-slate-300 border border-slate-800{% endif %}">🥃 Bebidas</a>
+        <a href="?tab=mixer{% if active_bar %}&bar_id={{ active_bar.id }}{% endif %}" class="px-5 py-2.5 rounded-xl text-xs font-bold transition whitespace-nowrap {% if active_tab == 'mixer' %}bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/20{% else %}bg-[#0F172A] text-slate-300 border border-slate-800{% endif %}">🥤 Mixers</a>
+        <a href="?tab=xarope{% if active_bar %}&bar_id={{ active_bar.id }}{% endif %}" class="px-5 py-2.5 rounded-xl text-xs font-bold transition whitespace-nowrap {% if active_tab == 'xarope' %}bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/20{% else %}bg-[#0F172A] text-slate-300 border border-slate-800{% endif %}">🍯 Xaropes</a>
+        <a href="?tab=guarnicao{% if active_bar %}&bar_id={{ active_bar.id }}{% endif %}" class="px-5 py-2.5 rounded-xl text-xs font-bold transition whitespace-nowrap {% if active_tab == 'guarnicao' %}bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/20{% else %}bg-[#0F172A] text-slate-300 border border-slate-800{% endif %}">🍋 Guarnições</a>
+        <a href="?tab=copo{% if active_bar %}&bar_id={{ active_bar.id }}{% endif %}" class="px-5 py-2.5 rounded-xl text-xs font-bold transition whitespace-nowrap {% if active_tab == 'copo' %}bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/20{% else %}bg-[#0F172A] text-slate-300 border border-slate-800{% endif %}">🍺 Copos</a>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="minimal-card p-6 h-fit space-y-4">
+            <h4 class="font-bold text-sm text-amber-400">➕ Adicionar Insumo Padronizado</h4>
+            <form method="POST" class="space-y-3">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="add_item">
+                <input type="hidden" name="category" value="{{ active_tab }}">
+
+                <div>
+                    <label class="form-label">Nome</label>
+                    <select name="name" required class="form-input text-xs text-white">
+                        {% for opt in available_names %}
+                        <option value="{{ opt }}">{{ opt }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <label class="form-label">Marca (Livre)</label>
+                    <input type="text" name="brand" class="form-input text-xs" placeholder="Ex: Tanqueray">
+                </div>
+
+                <div>
+                    <label class="form-label">Sabor / Versão Saborizada</label>
+                    <select name="flavor" class="form-input text-xs text-white">
+                        {% for val, label in flavors %}
+                        <option value="{{ val }}">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <label class="form-label">Tamanho / Embalagem</label>
+                    <select name="bottle_size" class="form-input text-xs text-white">
+                        {% for val, label in sizes %}
+                        <option value="{{ val }}">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <button type="submit" class="w-full btn-gold py-3 text-xs shadow-md">Cadastrar Insumo</button>
+            </form>
+        </div>
+
+        <div class="lg:col-span-2 space-y-3">
+            <h4 class="font-bold text-sm text-slate-300 mb-2">Itens Cadastrados</h4>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {% for item in items %}
+                <div class="minimal-card p-4 flex flex-col justify-between border {% if item.is_in_stock %}border-amber-500/50 bg-amber-500/5{% else %}border-slate-800{% endif %}">
+                    <div>
+                        <div class="flex justify-between items-start">
+                            <h5 class="font-bold text-sm text-white">{{ item.name }}</h5>
+                            <form method="POST" class="inline">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="delete_item">
+                                <input type="hidden" name="item_id" value="{{ item.id }}">
+                                <button type="submit" class="text-slate-500 hover:text-rose-400 text-xs">✕</button>
+                            </form>
+                        </div>
+                        <p class="text-xs text-amber-400 font-medium mt-0.5">{{ item.brand|default:"Genérico" }} • {{ item.flavor }}</p>
+                        <p class="text-[10px] text-slate-400 mt-1">Volume: {{ item.bottle_size }}</p>
+                    </div>
+
+                    <div class="mt-4 pt-3 border-t border-slate-800 flex justify-between items-center">
+                        <span class="text-[10px] font-semibold {% if item.is_in_stock %}text-emerald-400{% else %}text-slate-500{% endif %}">
+                            {% if item.is_in_stock %}Disponível{% else %}Em Falta{% endif %}
+                        </span>
+                        <form method="POST">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="toggle_stock">
+                            <input type="hidden" name="item_id" value="{{ item.id }}">
+                            <button type="submit" class="px-3 py-1.5 rounded-lg text-xs font-bold {% if item.is_in_stock %}bg-emerald-500/20 text-emerald-400 border border-emerald-500/30{% else %}bg-slate-800 text-slate-300{% endif %}">
+                                {% if item.is_in_stock %}✓ No Estoque{% else %}+ Marcar{% endif %}
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="col-span-2 py-16 text-center minimal-card text-slate-500 text-xs">
+                    Nenhum item cadastrado nesta categoria.
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

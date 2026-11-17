@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% block header_title %}Gerenciar Comandas Ativas{% endblock %}
+{% block content %}
+<div class="space-y-6">
+    <div class="minimal-card p-6">
+        <h3 class="font-bold text-amber-400 text-base mb-1">📋 Comandas & Contas Abertas</h3>
+        <p class="text-xs text-slate-400">Identificação por nome do cliente, itens consumidos e total acumulado.</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {% for data in session_data %}
+        <div class="minimal-card p-5 space-y-4 border border-amber-500/30 flex flex-col justify-between">
+            <div class="space-y-3">
+                <div class="flex justify-between items-center">
+                    <span class="text-xs font-bold bg-amber-500 text-slate-950 px-3 py-1 rounded-full">
+                        {% if data.session.is_fixed_bar %}Balcão{% else %}Mesa {{ data.session.table_number }}{% endif %}
+                    </span>
+                    <span class="text-sm font-black text-white">{{ data.session.client_name }}</span>
+                </div>
+
+                <div class="bg-slate-900 p-3 rounded-xl border border-slate-800 space-y-2">
+                    <p class="text-[11px] font-bold text-amber-400 uppercase">Itens Pedidos:</p>
+                    <ul class="text-xs text-slate-300 space-y-1">
+                        {% for order in data.items %}
+                        <li class="flex justify-between border-b border-slate-800/60 pb-1">
+                            <span>{{ order.quantity }}x {{ order.recipe.name }}</span>
+                            <span class="text-amber-400">R$ {{ order.recipe.price|floatformat:2 }}</span>
+                        </li>
+                        {% empty %}
+                        <li class="text-slate-500 text-xs">Nenhum item lançado.</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+
+                <div class="flex justify-between items-center px-1">
+                    <span class="text-xs text-slate-400">Total a Pagar:</span>
+                    <span class="text-base font-black text-emerald-400">R$ {{ data.total|floatformat:2 }}</span>
+                </div>
+            </div>
+
+            <div class="flex justify-between items-center pt-3 border-t border-slate-800">
+                <span class="text-[10px] text-slate-500">Iniciado às {{ data.session.created_at|date:"H:i" }}</span>
+                <form method="POST">
+                    {% csrf_token %}
+                    <input type="hidden" name="session_id" value="{{ data.session.id }}">
+                    <button type="submit" class="px-4 py-2 rounded-xl text-xs font-bold bg-emerald-500 text-slate-950 hover:bg-emerald-400 transition shadow">
+                        Fechar Conta ✓
+                    </button>
+                </form>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-span-2 text-center py-16 minimal-card text-slate-500 text-xs">
+            Nenhuma comanda ativa no momento.
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
